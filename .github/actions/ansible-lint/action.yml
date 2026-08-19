@@ -3,6 +3,16 @@ name: "Ansible Lint Suite"
 description: "Run the full Ansible lint suite: yamllint, ansible-lint (official action), markdownlint (official action, two-pass), and checkov (official action). Assumes ansible-setup has already run for yamllint's Python environment."
 
 inputs:
+  install-self-collection:
+    description: >-
+      Run 'ansible-galaxy collection install . --force' before linting, so ansible-lint can
+      resolve modules from collections declared in this repo's own galaxy.yml
+      'dependencies:' (e.g. community.general). Only affects the ~/.ansible/collections
+      install destination, not the working-tree copy of galaxy.yml, so it's safe to combine
+      with yamllint in the same job. 'true' for collection repos that declare
+      non-ansible.builtin module dependencies; 'false' (default) otherwise.
+    required: false
+    default: "false"
   ansible-lint-version:
     description: "ansible/ansible-lint action version to use"
     required: false
@@ -39,6 +49,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install self (collection only)
+      if: ${{ inputs.install-self-collection == 'true' }}
+      shell: bash
+      run: ansible-galaxy collection install . --force
+
     - name: Run yamllint
       shell: bash
       run: yamllint --config-file .yamllint.yml .

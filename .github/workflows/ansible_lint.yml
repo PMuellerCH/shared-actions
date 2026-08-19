@@ -35,6 +35,10 @@ name: Ansible Lint
         description: "Path to pip requirements file (must include yamllint)"
         type: string
         default: ".github/requirements.txt"
+      install-self-collection:
+        description: "Run 'ansible-galaxy collection install . --force' before linting, so ansible-lint can resolve modules from this repo's own galaxy.yml 'dependencies:'. 'true' for collection repos with non-ansible.builtin module dependencies, 'false' otherwise."
+        type: string
+        default: "false"
       ansible-requirements-file:
         description: "Path to a Galaxy requirements.yml for ansible-lint to resolve collection module references. Leave unset if the repo has none."
         type: string
@@ -88,6 +92,7 @@ jobs:
       - name: Run lint suite
         uses: PMuellerCH/shared-actions/.github/actions/ansible-lint@v1
         with:
+          install-self-collection: ${{ inputs.install-self-collection }}
           ansible-lint-version: ${{ inputs.ansible-lint-version }}
           ansible-requirements-file: ${{ inputs.ansible-requirements-file }}
           markdownlint-version: ${{ inputs.markdownlint-version }}
