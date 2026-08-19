@@ -1,0 +1,38 @@
+---
+name: "Ansible Environment Setup"
+description: "Set up Python and install pip-based tooling (yamllint, checkov's dependencies if used, molecule) for Ansible CI jobs. ansible-lint and markdownlint are handled by their own dedicated actions and do not need this step."
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.13"
+  requirements-file:
+    description: "Path to pip requirements file"
+    required: false
+    default: ".github/requirements.txt"
+
+runs:
+  using: "composite"
+  steps:
+    # setup-python's built-in pip cache (via cache-dependency-path) avoids
+    # re-downloading packages when the requirements file has not changed.
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+        cache-dependency-path: ${{ inputs.requirements-file }}
+
+    - name: Install Python dependencies
+      shell: bash
+      env:
+        REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+      run: |
+        if [ ! -f "$REQUIREMENTS_FILE" ]; then
+          echo "::error::Requirements file not found: $REQUIREMENTS_FILE"
+          exit 1
+        fi
+        # python -m pip ensures the pip that belongs to the interpreter set up
+        # by actions/setup-python is used, avoiding PATH/shim mismatches.
+        python -m pip install -r "$REQUIREMENTS_FILE"

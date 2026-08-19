@@ -1,0 +1,86 @@
+---
+name: "Ansible Lint Suite"
+description: "Run the full Ansible lint suite: yamllint, ansible-lint (official action), markdownlint (official action, two-pass), and checkov (official action). Assumes ansible-setup has already run for yamllint's Python environment."
+
+inputs:
+  ansible-lint-version:
+    description: "ansible/ansible-lint action version to use"
+    required: false
+    default: "v26.8.0"
+  ansible-requirements-file:
+    description: "Path to a Galaxy requirements.yml for role/collection dependencies ansible-lint needs to resolve module references. Leave empty to skip (no collection dependencies to install)."
+    required: false
+    default: ""
+  markdownlint-version:
+    description: "DavidAnson/markdownlint-cli2-action version to use"
+    required: false
+    default: "v24.2.0"
+  markdownlint-standard-config:
+    description: "Path to the markdownlint config for regular markdown files"
+    required: false
+    default: ".markdownlint.yml"
+  markdownlint-changelog-config:
+    description: "Path to the markdownlint config for CHANGELOG.md. Leave empty to skip the second pass (repo has no CHANGELOG.md or uses one config for everything)."
+    required: false
+    default: ""
+  checkov-version:
+    description: "bridgecrewio/checkov-action version to use"
+    required: false
+    default: "v12.3117.0"
+  checkov-framework:
+    description: "Checkov framework to scan. Override to 'all' for implementation repos with mixed content."
+    required: false
+    default: "ansible"
+  checkov-directory:
+    description: "Directory to scan with checkov"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run yamllint
+      shell: bash
+      run: yamllint --config-file .yamllint.yml .
+
+    - name: Run ansible-lint
+      uses: ansible/ansible-lint@${{ inputs.ansible-lint-version }}
+      with:
+        requirements_file: ${{ inputs.ansible-requirements-file }}
+
+    - name: Run markdownlint (standard files)
+      uses: DavidAnson/markdownlint-cli2-action@${{ inputs.markdownlint-version }}
+      with:
+        config: ${{ inputs.markdownlint-standard-config }}
+        globs: |
+          **/*.md
+          #CHANGELOG.md
+          #**/node_modules/**
+
+    # Two-pass markdownlint: standard files use a strict line-length limit;
+    # CHANGELOG.md uses a relaxed limit because release-please generates long lines.
+    - name: Check for CHANGELOG.md pass
+      id: changelog-check
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.markdownlint-changelog-config }}" ] && [ -f "CHANGELOG.md" ]; then
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "run=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Run markdownlint (CHANGELOG.md)
+      if: steps.changelog-check.outputs.run == 'true'
+      uses: DavidAnson/markdownlint-cli2-action@${{ inputs.markdownlint-version }}
+      with:
+        config: ${{ inputs.markdownlint-changelog-config }}
+        globs: CHANGELOG.md
+
+    - name: Run checkov
+      uses: bridgecrewio/checkov-action@${{ inputs.checkov-version }}
+      with:
+        directory: ${{ inputs.checkov-directory }}
+        framework: ${{ inputs.checkov-framework }}
+        output_format: cli
+        quiet: "true"
+        soft_fail: "false"

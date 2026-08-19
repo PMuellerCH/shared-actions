@@ -1,0 +1,98 @@
+---
+name: Ansible Lint
+
+# Reusable workflow — runs the full Ansible lint suite (yamllint, ansible-lint,
+# markdownlint, checkov) for any Ansible collection or implementation repo.
+#
+# Tool config files (.yamllint.yml, .ansible-lint, markdownlint configs,
+# .github/requirements.txt) must live in the calling repo. This workflow only
+# orchestrates the tools; it does not own any config.
+#
+# Minimal caller shape:
+#
+#   on:
+#     push:
+#       branches: [main]
+#     pull_request:
+#       branches: [main]
+#
+#   jobs:
+#     lint:
+#       uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
+#
+# All inputs have sensible defaults — most callers need no 'with:' block at all.
+# Implementation (playbook) repos with mixed content should set
+# checkov-framework: 'all' rather than the 'ansible'-only default.
+
+"on":
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to use (for yamllint's environment only)"
+        type: string
+        default: "3.13"
+      requirements-file:
+        description: "Path to pip requirements file (must include yamllint)"
+        type: string
+        default: ".github/requirements.txt"
+      ansible-requirements-file:
+        description: "Path to a Galaxy requirements.yml for ansible-lint to resolve collection module references. Leave unset if the repo has none."
+        type: string
+        default: ""
+      ansible-lint-version:
+        description: "ansible/ansible-lint action version"
+        type: string
+        default: "v26.8.0"
+      markdownlint-version:
+        description: "DavidAnson/markdownlint-cli2-action version"
+        type: string
+        default: "v24.2.0"
+      markdownlint-standard-config:
+        description: "Path to the markdownlint config for regular markdown files"
+        type: string
+        default: ".markdownlint.yml"
+      markdownlint-changelog-config:
+        description: "Path to the markdownlint config for CHANGELOG.md. Leave unset to skip the second pass."
+        type: string
+        default: ""
+      checkov-version:
+        description: "bridgecrewio/checkov-action version"
+        type: string
+        default: "v12.3117.0"
+      checkov-framework:
+        description: "Checkov framework to scan. Override to 'all' for implementation repos."
+        type: string
+        default: "ansible"
+      checkov-directory:
+        description: "Directory to pass to checkov --directory"
+        type: string
+        default: "."
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: PMuellerCH/shared-actions/.github/actions/ansible-setup@v1
+        with:
+          python-version: ${{ inputs.python-version }}
+          requirements-file: ${{ inputs.requirements-file }}
+
+      - name: Run lint suite
+        uses: PMuellerCH/shared-actions/.github/actions/ansible-lint@v1
+        with:
+          ansible-lint-version: ${{ inputs.ansible-lint-version }}
+          ansible-requirements-file: ${{ inputs.ansible-requirements-file }}
+          markdownlint-version: ${{ inputs.markdownlint-version }}
+          markdownlint-standard-config: ${{ inputs.markdownlint-standard-config }}
+          markdownlint-changelog-config: ${{ inputs.markdownlint-changelog-config }}
+          checkov-version: ${{ inputs.checkov-version }}
+          checkov-framework: ${{ inputs.checkov-framework }}
+          checkov-directory: ${{ inputs.checkov-directory }}

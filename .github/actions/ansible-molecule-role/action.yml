@@ -1,0 +1,78 @@
+---
+name: "Ansible Molecule Role Test"
+description: "Install Ansible collection dependencies and run molecule test for a single role. Called once per matrix item."
+
+inputs:
+  role:
+    description: "Role directory name to test (e.g. 'bitwarden')"
+    required: true
+  roles-base-path:
+    description: "Path from repo root to the roles directory"
+    required: false
+    default: "roles"
+  install-self-collection:
+    description: "Run 'ansible-galaxy collection install . --force' before installing deps. Set 'true' for collection repos, 'false' for implementation repos."
+    required: false
+    default: "true"
+  ansible-requirements-file:
+    description: "Path to the main Ansible Galaxy requirements file"
+    required: false
+    default: "requirements.yml"
+  molecule-requirements-file:
+    description: "Path to the molecule-specific Galaxy requirements file"
+    required: false
+    default: "requirements-molecule.yml"
+
+runs:
+  using: "composite"
+  steps:
+    # Cache keyed on both requirements files so a change in either invalidates
+    # the cache. If molecule-requirements-file does not exist, hashFiles returns
+    # an empty string and the key degrades gracefully.
+    # Restore happens before self-collection install so the cache does not
+    # overwrite the freshly installed current-repo collection.
+    - name: Restore Ansible collection cache
+      id: ansible-cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.ansible
+        key: ${{ runner.os }}-ansible-${{ hashFiles(inputs.ansible-requirements-file) }}-${{ hashFiles(inputs.molecule-requirements-file) }}
+        restore-keys: |
+          ${{ runner.os }}-ansible-${{ hashFiles(inputs.ansible-requirements-file) }}-
+          ${{ runner.os }}-ansible-
+
+    # Installed after cache restore so the current repo's collection code always
+    # wins, regardless of what the cache may have placed in ~/.ansible.
+    # ansible-core >= 2.21 strips YAML document markers (---) from galaxy.yml
+    # during install, so the lint job must NOT do this — only molecule does.
+    - name: Install self (collection only)
+      if: ${{ inputs.install-self-collection == 'true' }}
+      shell: bash
+      run: ansible-galaxy collection install . --force
+
+    - name: Install Ansible Galaxy dependencies
+      if: steps.ansible-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        REQUIREMENTS_FILE: ${{ inputs.ansible-requirements-file }}
+      run: |
+        if [ -f "$REQUIREMENTS_FILE" ]; then
+          ansible-galaxy collection install -r "$REQUIREMENTS_FILE"
+        fi
+
+    - name: Install Molecule Galaxy dependencies
+      if: steps.ansible-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        MOLECULE_REQUIREMENTS_FILE: ${{ inputs.molecule-requirements-file }}
+      run: |
+        if [ -f "$MOLECULE_REQUIREMENTS_FILE" ]; then
+          ansible-galaxy collection install -r "$MOLECULE_REQUIREMENTS_FILE"
+        fi
+
+    - name: Run molecule
+      shell: bash
+      working-directory: ${{ inputs.roles-base-path }}/${{ inputs.role }}
+      env:
+        ANSIBLE_PYTHON_INTERPRETER: auto_silent
+      run: molecule test

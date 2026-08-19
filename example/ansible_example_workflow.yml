@@ -1,0 +1,68 @@
+# Example usage of PMuellerCH/shared-actions' reusable workflows.
+# These are illustrative snippets, not a file that's actually invoked — copy
+# what you need into your own repo's .github/workflows/.
+
+# ---------------------------------------------------------------------------
+# COLLECTION REPO EXAMPLE (e.g. an Ansible Galaxy collection with roles/)
+# ---------------------------------------------------------------------------
+
+# .github/workflows/ci.yml
+---
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  lint:
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
+    with:
+      ansible-requirements-file: requirements.yml # only if you have collection deps to resolve
+
+# .github/workflows/molecule.yml
+---
+"on":
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+jobs:
+  molecule:
+    if: >-
+      startsWith(github.head_ref, 'release-please--') ||
+      startsWith(github.head_ref, 'renovate/') ||
+      github.event_name == 'workflow_dispatch'
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
+    # install-self-collection defaults to 'true' — correct for a collection repo
+
+# ---------------------------------------------------------------------------
+# IMPLEMENTATION REPO EXAMPLE (e.g. an Ansible playbook repo, not a collection —
+# has mixed content beyond just roles/, and doesn't install itself as a
+# collection)
+# ---------------------------------------------------------------------------
+
+# .github/workflows/ci.yml
+---
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  lint:
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
+    with:
+      checkov-framework: all # scan everything, not just Ansible-shaped content
+
+# .github/workflows/molecule.yml (only if the repo has local roles with their
+# own molecule/default/ scenarios worth testing — many playbook repos won't)
+---
+"on":
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+jobs:
+  molecule:
+    if: startsWith(github.head_ref, 'renovate/') || github.event_name == 'workflow_dispatch'
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
+    with:
+      install-self-collection: "false" # this repo isn't a Galaxy collection

@@ -1,0 +1,130 @@
+---
+name: Ansible Molecule
+
+# Reusable workflow — runs molecule tests for a set of roles in parallel.
+# Each role gets its own runner; results are independent (fail-fast: false).
+#
+# Roles are discovered automatically: any directory under roles-base-path with a
+# molecule/default/ scenario gets tested. Pass 'roles' explicitly only to override
+# this, e.g. to test a deliberate subset. Auto-discovery exists specifically so a
+# new role with a molecule scenario can't silently go untested because a
+# hardcoded list wasn't updated.
+#
+# The caller controls WHEN molecule runs (e.g. only on release-please/Renovate
+# PRs). Add an 'if:' condition to the calling job, not here — this workflow
+# always runs every discovered/given role when invoked. Example:
+#
+#   jobs:
+#     molecule:
+#       if: >-
+#         startsWith(github.head_ref, 'release-please--') ||
+#         startsWith(github.head_ref, 'renovate/') ||
+#         github.event_name == 'workflow_dispatch'
+#       uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
+#
+# IMPORTANT: include the 'renovate/' branch prefix in that condition if you
+# intend to gate Renovate automerge on this check — omitting it means molecule
+# silently never runs on Renovate PRs, making "tests pass" a vacuous automerge
+# gate.
+#
+# For collection repos (default): set install-self-collection to 'true' (default).
+# For implementation repos: set install-self-collection to 'false'.
+#
+# Tool config (requirements files) and molecule scenarios must live in the
+# calling repo. Only the orchestration is shared here.
+
+"on":
+  workflow_call:
+    inputs:
+      roles:
+        description: "JSON array of role names to test, e.g. '[\"bitwarden\", \"synology\"]'. Leave unset to auto-discover every role under roles-base-path with a molecule/default scenario."
+        type: string
+        required: false
+        default: ""
+      python-version:
+        description: "Python version to use"
+        type: string
+        default: "3.13"
+      requirements-file:
+        description: "Path to pip requirements file (must include molecule and molecule-plugins[docker])"
+        type: string
+        default: ".github/requirements.txt"
+      ansible-requirements-file:
+        description: "Path to the main Ansible Galaxy requirements file"
+        type: string
+        default: "requirements.yml"
+      molecule-requirements-file:
+        description: "Path to the molecule-specific Galaxy requirements file"
+        type: string
+        default: "requirements-molecule.yml"
+      install-self-collection:
+        description: "Run 'ansible-galaxy collection install . --force' before deps. 'true' for collection repos, 'false' for implementation repos."
+        type: string
+        default: "true"
+      roles-base-path:
+        description: "Path from repo root to the roles directory"
+        type: string
+        default: "roles"
+
+permissions:
+  contents: read
+
+jobs:
+  discover-roles:
+    name: Discover roles
+    runs-on: ubuntu-latest
+    outputs:
+      roles: ${{ steps.discover.outputs.roles }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Discover roles with a molecule/default scenario
+        id: discover
+        shell: bash
+        env:
+          ROLES_INPUT: ${{ inputs.roles }}
+          ROLES_BASE_PATH: ${{ inputs.roles-base-path }}
+        run: |
+          if [ -n "$ROLES_INPUT" ]; then
+            echo "roles=$ROLES_INPUT" >> "$GITHUB_OUTPUT"
+            echo "Using explicit roles input: $ROLES_INPUT"
+            exit 0
+          fi
+          roles=$(for d in "$ROLES_BASE_PATH"/*/molecule/default; do
+            [ -d "$d" ] && basename "$(dirname "$(dirname "$d")")"
+          done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "roles=$roles" >> "$GITHUB_OUTPUT"
+          echo "Discovered roles: $roles"
+
+  molecule:
+    name: Molecule (${{ matrix.role }})
+    needs: discover-roles
+    if: needs.discover-roles.result == 'success' && needs.discover-roles.outputs.roles != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        role: ${{ fromJson(needs.discover-roles.outputs.roles) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: PMuellerCH/shared-actions/.github/actions/ansible-setup@v1
+        with:
+          python-version: ${{ inputs.python-version }}
+          requirements-file: ${{ inputs.requirements-file }}
+
+      # On a cold cache, each matrix runner installs Galaxy deps independently
+      # before the first runner saves the cache. Subsequent runs all get cache
+      # hits. This is a known trade-off: a separate serial deps job would
+      # reduce cold-start time but adds significant workflow complexity.
+      - name: Run molecule for ${{ matrix.role }}
+        uses: PMuellerCH/shared-actions/.github/actions/ansible-molecule-role@v1
+        with:
+          role: ${{ matrix.role }}
+          roles-base-path: ${{ inputs.roles-base-path }}
+          install-self-collection: ${{ inputs.install-self-collection }}
+          ansible-requirements-file: ${{ inputs.ansible-requirements-file }}
+          molecule-requirements-file: ${{ inputs.molecule-requirements-file }}

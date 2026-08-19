@@ -1,0 +1,43 @@
+---
+name: CI
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install yamllint
+        run: pip install yamllint==1.38.0
+
+      - name: yamllint
+        run: yamllint --config-file .yamllint.yml .
+
+      - name: Validate action/workflow YAML syntax
+        run: |
+          python3 -c "
+          import glob, yaml
+          for f in glob.glob('.github/**/*.yml', recursive=True):
+              with open(f) as fh:
+                  list(yaml.safe_load_all(fh))
+              print(f'{f}: OK')
+          for f in glob.glob('example/*.yml'):
+              with open(f) as fh:
+                  list(yaml.safe_load_all(fh))
+              print(f'{f}: OK')
+          "
