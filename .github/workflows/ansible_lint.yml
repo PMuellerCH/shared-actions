@@ -8,6 +8,16 @@ name: Ansible Lint
 # .github/requirements.txt) must live in the calling repo. This workflow only
 # orchestrates the tools; it does not own any config.
 #
+# Third-party actions (ansible-lint, markdownlint-cli2-action, checkov-action) are
+# called directly as job steps here, NOT wrapped in one of this repo's own composite
+# actions. GitHub Actions has a long-standing runner bug where an action's own
+# GITHUB_ACTION_REF resolves to the ref of the *outer* composite action instead of
+# its own pinned ref when composite actions are nested (actions/runner#2473,
+# actions/runner#2525) — ansible-lint's action.yml relies on that value to fetch its
+# version-matched requirements lockfile, so nesting it inside a composite action
+# breaks it. Only wrap third-party actions in a composite action if they don't
+# self-inspect their own ref.
+#
 # Minimal caller shape:
 #
 #   on:
@@ -77,12 +87,53 @@ jobs:
           python-version: ${{ inputs.python-version }}
           requirements-file: ${{ inputs.requirements-file }}
 
-      - name: Run lint suite
-        uses: PMuellerCH/shared-actions/.github/actions/ansible-lint@v1
+      - name: Install self (collection only)
+        if: ${{ inputs.install-self-collection == 'true' }}
+        shell: bash
+        run: ansible-galaxy collection install . --force
+
+      - name: Run yamllint
+        shell: bash
+        run: yamllint --config-file .yamllint.yml .
+
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@v26.8.0
         with:
-          install-self-collection: ${{ inputs.install-self-collection }}
-          ansible-requirements-file: ${{ inputs.ansible-requirements-file }}
-          markdownlint-standard-config: ${{ inputs.markdownlint-standard-config }}
-          markdownlint-changelog-config: ${{ inputs.markdownlint-changelog-config }}
-          checkov-framework: ${{ inputs.checkov-framework }}
-          checkov-directory: ${{ inputs.checkov-directory }}
+          requirements_file: ${{ inputs.ansible-requirements-file }}
+
+      - name: Run markdownlint (standard files)
+        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+        with:
+          config: ${{ inputs.markdownlint-standard-config }}
+          globs: |
+            **/*.md
+            #CHANGELOG.md
+            #**/node_modules/**
+
+      # Two-pass markdownlint: standard files use a strict line-length limit;
+      # CHANGELOG.md uses a relaxed limit because release-please generates long lines.
+      - name: Check for CHANGELOG.md pass
+        id: changelog-check
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.markdownlint-changelog-config }}" ] && [ -f "CHANGELOG.md" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run markdownlint (CHANGELOG.md)
+        if: steps.changelog-check.outputs.run == 'true'
+        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+        with:
+          config: ${{ inputs.markdownlint-changelog-config }}
+          globs: CHANGELOG.md
+
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@v12.3117.0
+        with:
+          directory: ${{ inputs.checkov-directory }}
+          framework: ${{ inputs.checkov-framework }}
+          output_format: cli
+          quiet: "true"
+          soft_fail: "false"

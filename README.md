@@ -74,12 +74,22 @@ collection-repo and implementation-repo worked examples.
 
 - `ansible-setup` — Python environment + pip install from a requirements file. Used by both
   reusable workflows above for their respective tool needs.
-- `ansible-lint` — orchestrates the four lint tools described above.
 - `ansible-molecule-role` — installs Galaxy dependencies (cached) and runs `molecule test`
   for a single role. Called once per matrix item by `ansible_molecule.yml`.
 
 These exist to keep the reusable workflows readable; their input/output contracts are not
 considered stable for direct external use and may change without a major version bump.
+
+**Do not wrap a third-party action in one of these composite actions if that action
+inspects its own ref/version at runtime** (e.g. to fetch a matching requirements lockfile,
+as `ansible/ansible-lint`'s own `action.yml` does). GitHub Actions has a long-standing
+runner bug where `GITHUB_ACTION_REF`/`github.action_ref` resolves to the *outer* composite
+action's ref instead of the nested action's own pinned ref
+([actions/runner#2473](https://github.com/actions/runner/issues/2473),
+[actions/runner#2525](https://github.com/actions/runner/issues/2525)). `ansible_lint.yml`
+calls `ansible/ansible-lint`, `DavidAnson/markdownlint-cli2-action`, and
+`bridgecrewio/checkov-action` directly as job steps for this reason, not through a
+composite action.
 
 ## Development
 
