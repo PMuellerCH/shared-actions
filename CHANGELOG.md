@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/PMuellerCH/shared-actions/compare/v1.1.0...v1.1.1) (2026-08-20)
+
+
+### Miscellaneous
+
+* **deps:** update bridgecrewio/checkov-action action to v12.3119.0 ([#1](https://github.com/PMuellerCH/shared-actions/issues/1)) ([7e0bff1](https://github.com/PMuellerCH/shared-actions/commit/7e0bff1cdeb5b6d5391dac585d5c5deaf8de5e7d))
+* **deps:** update dependency python to 3.14 ([#2](https://github.com/PMuellerCH/shared-actions/issues/2)) ([e6dd05c](https://github.com/PMuellerCH/shared-actions/commit/e6dd05c48db19d6245b8bd50eaeacd8b2ee74a7d))
+
 ## [1.1.0](https://github.com/PMuellerCH/shared-actions/compare/v1.0.0...v1.1.0) (2026-08-20)
 
 
