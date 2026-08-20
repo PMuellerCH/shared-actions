@@ -1,0 +1,52 @@
+---
+name: Release Please
+
+# Runs release-please to propose/cut semver releases (v1.2.3-style tags), then
+# moves the floating major-version tag (v1) to point at the newest release in
+# that major line — the standard GitHub Actions convention (same as
+# actions/checkout@v4 always resolving to the latest v4.x.x). Consumers pin to
+# the floating tag (@v1) for a stable-but-patchable reference; the underlying
+# semver tags exist so a specific version can be pinned/audited/rolled back to
+# if ever needed.
+
+"on":
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  move-major-tag:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Move floating major-version tag
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          major="${TAG_NAME%%.*}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f "$major" "$TAG_NAME"
+          git push origin "$major" --force

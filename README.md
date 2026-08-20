@@ -11,12 +11,23 @@ building blocks — call the workflows in `.github/workflows/`, not the actions 
 
 ## Versioning
 
-Consumers **must** pin to a tagged release (`@v1`, not `@main`). A change here only reaches
-consumers once they bump their own pin — Renovate proposes that bump like any other
-dependency (`github-actions` manager), flowing through the consumer's own lint+molecule+
-automerge gate. This is a deliberate deviation from swisstopo's `@main`-everywhere pattern:
-automerge is in scope here, and an `@main` reference would mean a bad change here breaks
-every consumer instantly with no review gate.
+Consumers **must** pin to the floating major-version tag (`@v1`, not `@main`), the same
+convention official actions like `actions/checkout@v4` use. Releases are cut by
+[release-please](https://github.com/googleapis/release-please) from Conventional Commits on
+every push to `main`, producing real semver tags (`v1.2.3`); a second job then force-moves the
+`v1` tag to point at the newest release in that major line. Consumers pinned to `@v1`
+therefore pick up every patch/minor release **silently, with no PR of their own** — this is
+deliberate: it's what makes the floating-tag convention useful (no per-consumer churn for
+routine fixes), same as how `actions/checkout@v4` updates work.
+
+This is a real tradeoff, not a free lunch: it means a consumer never explicitly reviews a
+routine `v1.x.y` bump before it takes effect on their next CI run — the review gate for
+changes here is this repo's own PR process, not each consumer's. A **major** bump (`v2`) is
+never silent: it requires every consumer to deliberately change their own `@v1` pin, so a
+breaking change can never propagate without an explicit action on the consuming side.
+
+Consumers can still audit or pin to an exact `v1.2.3` tag directly if they ever need to bypass
+the floating tag for a specific reason (e.g. bisecting a regression).
 
 ## Reusable workflows
 
