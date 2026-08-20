@@ -43,14 +43,6 @@ name: Ansible Lint
         description: "Path to a Galaxy requirements.yml for ansible-lint to resolve collection module references. Leave unset if the repo has none."
         type: string
         default: ""
-      ansible-lint-version:
-        description: "ansible/ansible-lint action version"
-        type: string
-        default: "v26.8.0"
-      markdownlint-version:
-        description: "DavidAnson/markdownlint-cli2-action version"
-        type: string
-        default: "v24.2.0"
       markdownlint-standard-config:
         description: "Path to the markdownlint config for regular markdown files"
         type: string
@@ -59,10 +51,6 @@ name: Ansible Lint
         description: "Path to the markdownlint config for CHANGELOG.md. Leave unset to skip the second pass."
         type: string
         default: ""
-      checkov-version:
-        description: "bridgecrewio/checkov-action version"
-        type: string
-        default: "v12.3117.0"
       checkov-framework:
         description: "Checkov framework to scan. Override to 'all' for implementation repos."
         type: string
@@ -93,11 +81,8 @@ jobs:
         uses: PMuellerCH/shared-actions/.github/actions/ansible-lint@v1
         with:
           install-self-collection: ${{ inputs.install-self-collection }}
-          ansible-lint-version: ${{ inputs.ansible-lint-version }}
           ansible-requirements-file: ${{ inputs.ansible-requirements-file }}
-          markdownlint-version: ${{ inputs.markdownlint-version }}
           markdownlint-standard-config: ${{ inputs.markdownlint-standard-config }}
           markdownlint-changelog-config: ${{ inputs.markdownlint-changelog-config }}
-          checkov-version: ${{ inputs.checkov-version }}
           checkov-framework: ${{ inputs.checkov-framework }}
           checkov-directory: ${{ inputs.checkov-directory }}
