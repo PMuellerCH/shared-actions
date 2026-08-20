@@ -101,6 +101,11 @@ jobs:
         with:
           requirements_file: ${{ inputs.ansible-requirements-file }}
 
+      # markdownlint-cli2 does not read .gitignore automatically (unlike some other
+      # linters), so gitignored artifact dirs must be excluded explicitly here.
+      # .ansible/ is where `ansible-galaxy collection install .` (install-self-collection)
+      # places the installed collection copy, including its own CHANGELOG.md — without
+      # this exclusion, that copy gets linted as if it were repo content.
       - name: Run markdownlint (standard files)
         uses: DavidAnson/markdownlint-cli2-action@v24.2.0
         with:
@@ -109,6 +114,7 @@ jobs:
             **/*.md
             #CHANGELOG.md
             #**/node_modules/**
+            #**/.ansible/**
 
       # Two-pass markdownlint: standard files use a strict line-length limit;
       # CHANGELOG.md uses a relaxed limit because release-please generates long lines.
