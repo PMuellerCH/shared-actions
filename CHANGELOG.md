@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/PMuellerCH/shared-actions/compare/v1.1.1...v1.1.2) (2026-08-31)
+
+
+### Miscellaneous
+
+* **deps:** update bridgecrewio/checkov-action action to v12.3122.0 ([#6](https://github.com/PMuellerCH/shared-actions/issues/6)) ([6530621](https://github.com/PMuellerCH/shared-actions/commit/65306210df2a120dbbaefa2c410ad64a4a65329d))
+
 ## [1.1.1](https://github.com/PMuellerCH/shared-actions/compare/v1.1.0...v1.1.1) (2026-08-20)
 
 
