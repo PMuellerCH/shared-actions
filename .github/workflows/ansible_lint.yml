@@ -97,7 +97,7 @@ jobs:
         run: yamllint --config-file .yamllint.yml .
 
       - name: Run ansible-lint
-        uses: ansible/ansible-lint@v26.8.0
+        uses: ansible/ansible-lint@v26.9.0
         with:
           requirements_file: ${{ inputs.ansible-requirements-file }}
 
