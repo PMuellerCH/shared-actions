@@ -22,8 +22,12 @@ name: Ansible Molecule
 #         github.event_name == 'workflow_dispatch'
 #       uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
 #
-# IMPORTANT: include the 'renovate/' branch prefix in that condition if you
-# intend to gate Renovate automerge on this check — omitting it means molecule
+# Alternatively, run on every PR and pass a path-filtered 'roles' JSON array computed
+# by a preceding job (empty for release-please/dispatch = full matrix); see
+# PMuellerCH/ansible-collection-workstation's molecule.yml for a working example.
+#
+# IMPORTANT: when gating by branch as above, include the 'renovate/' branch prefix in
+# that condition if you intend to gate Renovate automerge on this check — omitting it means molecule
 # silently never runs on Renovate PRs, making "tests pass" a vacuous automerge
 # gate.
 #
