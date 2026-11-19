@@ -107,7 +107,7 @@ jobs:
       # places the installed collection copy, including its own CHANGELOG.md — without
       # this exclusion, that copy gets linted as if it were repo content.
       - name: Run markdownlint (standard files)
-        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+        uses: DavidAnson/markdownlint-cli2-action@v25.0.0
         with:
           config: ${{ inputs.markdownlint-standard-config }}
           globs: |
@@ -130,7 +130,7 @@ jobs:
 
       - name: Run markdownlint (CHANGELOG.md)
         if: steps.changelog-check.outputs.run == 'true'
-        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+        uses: DavidAnson/markdownlint-cli2-action@v25.0.0
         with:
           config: ${{ inputs.markdownlint-changelog-config }}
           globs: CHANGELOG.md
