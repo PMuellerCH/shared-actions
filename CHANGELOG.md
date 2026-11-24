@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.3](https://github.com/PMuellerCH/shared-actions/compare/v1.1.2...v1.1.3) (2026-11-24)
+
+
+### Bug Fixes
+
+* pass github.token to molecule test as GITHUB_TOKEN ([#17](https://github.com/PMuellerCH/shared-actions/issues/17)) ([4ac3deb](https://github.com/PMuellerCH/shared-actions/commit/4ac3debf8c1b024b181c7f01ff22038c81470399)), closes [#16](https://github.com/PMuellerCH/shared-actions/issues/16)
+
+
+### Miscellaneous
+
+* **deps:** update bridgecrewio/checkov-action action to v12.3146.0 ([#15](https://github.com/PMuellerCH/shared-actions/issues/15)) ([142f08f](https://github.com/PMuellerCH/shared-actions/commit/142f08fe3ba5bb539f956e04acce46d6914f8268))
+* **deps:** update davidanson/markdownlint-cli2-action action to v25.1.0 ([#14](https://github.com/PMuellerCH/shared-actions/issues/14)) ([f1f6bd0](https://github.com/PMuellerCH/shared-actions/commit/f1f6bd0ca02a8bd8b92fd5e67758075e67b0772d))
+
+
+### Documentation
+
+* document path-filtered molecule on every PR ([#13](https://github.com/PMuellerCH/shared-actions/issues/13)) ([1164727](https://github.com/PMuellerCH/shared-actions/commit/11647270e2f07687b33f7f83ec169f9a001a40d4)), closes [#12](https://github.com/PMuellerCH/shared-actions/issues/12)
+
 ## [1.1.2](https://github.com/PMuellerCH/shared-actions/compare/v1.1.1...v1.1.2) (2026-11-19)
 
 
