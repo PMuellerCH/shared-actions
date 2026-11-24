@@ -75,4 +75,10 @@ runs:
       working-directory: ${{ inputs.roles-base-path }}/${{ inputs.role }}
       env:
         ANSIBLE_PYTHON_INTERPRETER: auto_silent
+        # Roles that resolve release-asset digests from api.github.com read
+        # GITHUB_TOKEN from the environment. Without it every run is
+        # unauthenticated (60 requests/hour per shared runner IP) and fails with
+        # HTTP 403. The token is the caller's workflow token, so it is limited to
+        # that workflow's declared permissions (contents: read is enough).
+        GITHUB_TOKEN: ${{ github.token }}
       run: molecule test
