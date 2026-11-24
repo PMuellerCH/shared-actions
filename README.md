@@ -78,6 +78,11 @@ Set `install-self-collection: 'false'` for implementation/playbook repos (the de
 assumes the repo is itself a Galaxy collection that should `ansible-galaxy collection install .`
 before testing).
 
+No secrets are required: the workflow's own `github.token` (limited to the caller's declared
+`permissions:`, `contents: read` is enough) is passed to `molecule test` as `GITHUB_TOKEN`, so roles
+that query `api.github.com` are not held to the unauthenticated rate limit. It reaches the runner
+(Ansible controller) environment only, not tasks running inside the test containers.
+
 See [`example/ansible_example_workflow.yml`](example/ansible_example_workflow.yml) for full
 collection-repo and implementation-repo worked examples.
 
@@ -87,6 +92,9 @@ collection-repo and implementation-repo worked examples.
   reusable workflows above for their respective tool needs.
 - `ansible-molecule-role` — installs Galaxy dependencies (cached) and runs `molecule test`
   for a single role. Called once per matrix item by `ansible_molecule.yml`.
+  The calling workflow's `github.token` is exported as `GITHUB_TOKEN` to `molecule test`, so roles
+  that query `api.github.com` (e.g. for release-asset digests) are not limited to the 60
+  unauthenticated requests per hour; it carries only the caller's declared workflow permissions.
 
 These exist to keep the reusable workflows readable; their input/output contracts are not
 considered stable for direct external use and may change without a major version bump.
