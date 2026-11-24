@@ -20,6 +20,9 @@ jobs:
       ansible-requirements-file: requirements.yml # only if you have collection deps to resolve
 
 # .github/workflows/molecule.yml
+# Simple branch-gated variant. To test every PR instead, add a `changes` job that
+# computes the changed roles and pass them via `with: roles:` — see
+# PMuellerCH/ansible-collection-workstation's molecule.yml.
 ---
 "on":
   pull_request:

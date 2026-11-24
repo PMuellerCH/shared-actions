@@ -69,10 +69,17 @@ jobs:
 ```
 
 **The `if:` condition is the caller's responsibility, not this workflow's** — controls when
-molecule runs (e.g. not on every ordinary PR, since a full molecule run is too slow to gate
-routine iteration). **Include the `renovate/` branch prefix if you intend to gate Renovate
-automerge on this check** — omitting it means molecule silently never runs on Renovate PRs,
-making "tests pass" a vacuous automerge gate.
+molecule runs. Two common patterns:
+
+- **Gate by branch** (the snippet above): only release-please, Renovate and manual runs.
+  Cheap, but ordinary PRs get no molecule feedback. **Include the `renovate/` branch prefix
+  if you intend to gate Renovate automerge on this check** — omitting it means molecule
+  silently never runs on Renovate PRs, making "tests pass" a vacuous automerge gate.
+- **Run on every PR, path-filtered** (used by `ansible-collection-workstation`): a `changes`
+  job works out which roles' files changed and passes them as the `roles` input (a JSON
+  array); release-please and `workflow_dispatch` leave `roles` empty to get the full
+  matrix. Every PR is then tested, including Renovate's, at the cost of only the touched
+  roles. See that repo's `molecule.yml` for a working implementation.
 
 Set `install-self-collection: 'false'` for implementation/playbook repos (the default `'true'`
 assumes the repo is itself a Galaxy collection that should `ansible-galaxy collection install .`
