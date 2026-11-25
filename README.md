@@ -12,13 +12,13 @@ building blocks — call the workflows in `.github/workflows/`, not the actions 
 ## Versioning
 
 Consumers **must** pin to the floating major-version tag (`@v1`, not `@main`), the same
-convention official actions like `actions/checkout@v4` use. Releases are cut by
+convention first-party actions use for their own major tags. Releases are cut by
 [release-please](https://github.com/googleapis/release-please) from Conventional Commits on
 every push to `main`, producing real semver tags (`v1.2.3`); a second job then force-moves the
 `v1` tag to point at the newest release in that major line. Consumers pinned to `@v1`
 therefore pick up every patch/minor release **silently, with no PR of their own** — this is
 deliberate: it's what makes the floating-tag convention useful (no per-consumer churn for
-routine fixes), same as how `actions/checkout@v4` updates work.
+routine fixes), a deliberate first-party exception to the SHA-pinning policy below, which applies to third-party actions.
 
 This is a real tradeoff, not a free lunch: it means a consumer never explicitly reviews a
 routine `v1.x.y` bump before it takes effect on their next CI run — the review gate for
@@ -116,6 +116,14 @@ action's ref instead of the nested action's own pinned ref
 calls `ansible/ansible-lint`, `DavidAnson/markdownlint-cli2-action`, and
 `bridgecrewio/checkov-action` directly as job steps for this reason, not through a
 composite action.
+
+## Supply-chain hardening
+
+All third-party actions used here are pinned to full commit SHAs with the version as a trailing
+comment (`uses: owner/action@<sha> # v7`); Renovate keeps both in sync
+(`helpers:pinGitHubActionDigests`) and waits `minimumReleaseAge: "3 days"` before proposing an
+update (this also delays automerge of digest and pin updates). The internal `PMuellerCH/shared-actions/...@v1` references stay on the floating tag by
+design (see Versioning). Consumers should pin third-party actions the same way.
 
 ## Development
 
