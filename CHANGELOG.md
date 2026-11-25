@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.4](https://github.com/PMuellerCH/shared-actions/compare/v1.1.3...v1.1.4) (2026-11-25)
+
+
+### Bug Fixes
+
+* drop renovate minimumReleaseAge and enable automerge ([#23](https://github.com/PMuellerCH/shared-actions/issues/23)) ([9874b3e](https://github.com/PMuellerCH/shared-actions/commit/9874b3e0738cc6be0ef14c29754ae16565a53b80)), closes [#22](https://github.com/PMuellerCH/shared-actions/issues/22)
+
+
+### Miscellaneous
+
+* **deps:** update ansible/ansible-lint action to v26.11.1 ([#24](https://github.com/PMuellerCH/shared-actions/issues/24)) ([412b56e](https://github.com/PMuellerCH/shared-actions/commit/412b56ec49c7c1fd976da4256cbd4d981b7c6d95))
+* **deps:** update bridgecrewio/checkov-action action to v12.3147.0 ([#20](https://github.com/PMuellerCH/shared-actions/issues/20)) ([63ab77e](https://github.com/PMuellerCH/shared-actions/commit/63ab77e7adbd58fb1592b7a569522dc794830e97))
+
+
+### CI/CD
+
+* SHA-pin third-party GitHub Actions and add Renovate minimumReleaseAge ([#19](https://github.com/PMuellerCH/shared-actions/issues/19)) ([0e31017](https://github.com/PMuellerCH/shared-actions/commit/0e31017c87f7ee4a6ccaa7450f21ae6c71a0cd31))
+
 ## [1.1.3](https://github.com/PMuellerCH/shared-actions/compare/v1.1.2...v1.1.3) (2026-11-24)
 
 
