@@ -121,8 +121,9 @@ composite action.
 
 All third-party actions used here are pinned to full commit SHAs with the version as a trailing
 comment (`uses: owner/action@<sha> # v7`); Renovate keeps both in sync
-(`helpers:pinGitHubActionDigests`) and waits `minimumReleaseAge: "3 days"` before proposing an
-update (this also delays automerge of digest and pin updates). The internal `PMuellerCH/shared-actions/...@v1` references stay on the floating tag by
+(`helpers:pinGitHubActionDigests`). Non-major updates (minor, patch, pin, digest) are automerged
+(squash) once the `lint` check passes; major updates stay on manual review. There is deliberately
+no `minimumReleaseAge`. The internal `PMuellerCH/shared-actions/...@v1` references stay on the floating tag by
 design (see Versioning). Consumers should pin third-party actions the same way.
 
 ## Development

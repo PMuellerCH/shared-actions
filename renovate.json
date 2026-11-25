@@ -1,13 +1,19 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
-  "minimumReleaseAge": "3 days",
   "labels": ["dependencies"],
+  "platformAutomerge": false,
   "packageRules": [
     {
       "matchPackageNames": ["PMuellerCH/shared-actions"],
       "pinDigests": false,
       "description": "Internal references stay on the floating @v1 major tag by design (see README, Versioning)."
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "description": "Auto-merge non-major updates (bug fixes, backwards-compatible features, pins, digests) once CI passes. Major/breaking updates always stay on manual review."
     }
   ]
 }
