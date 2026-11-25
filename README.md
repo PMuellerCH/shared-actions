@@ -117,6 +117,14 @@ calls `ansible/ansible-lint`, `DavidAnson/markdownlint-cli2-action`, and
 `bridgecrewio/checkov-action` directly as job steps for this reason, not through a
 composite action.
 
+## Supply-chain hardening
+
+All third-party actions used here are pinned to full commit SHAs with the version as a trailing
+comment (`uses: owner/action@<sha> # v7`); Renovate keeps both in sync
+(`helpers:pinGitHubActionDigests`) and waits `minimumReleaseAge: "3 days"` before proposing an
+update. The internal `PMuellerCH/shared-actions/...@v1` references stay on the floating tag by
+design (see Versioning). Consumers should pin third-party actions the same way.
+
 ## Development
 
 This repo has no roles or Ansible content of its own to lint/test — it's pure GitHub Actions

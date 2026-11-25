@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
         uses: PMuellerCH/shared-actions/.github/actions/ansible-setup@v1
@@ -97,7 +97,7 @@ jobs:
         run: yamllint --config-file .yamllint.yml .
 
       - name: Run ansible-lint
-        uses: ansible/ansible-lint@v26.11.0
+        uses: ansible/ansible-lint@b74fb6f73d234bf92672372cb1c10768e4018d16 # v26.11.0
         with:
           requirements_file: ${{ inputs.ansible-requirements-file }}
 
@@ -107,7 +107,7 @@ jobs:
       # places the installed collection copy, including its own CHANGELOG.md — without
       # this exclusion, that copy gets linted as if it were repo content.
       - name: Run markdownlint (standard files)
-        uses: DavidAnson/markdownlint-cli2-action@v25.1.0
+        uses: DavidAnson/markdownlint-cli2-action@3ce8f712b5d8f31acd8e201be6d97e3d2bb23eb7 # v25.1.0
         with:
           config: ${{ inputs.markdownlint-standard-config }}
           globs: |
@@ -130,13 +130,13 @@ jobs:
 
       - name: Run markdownlint (CHANGELOG.md)
         if: steps.changelog-check.outputs.run == 'true'
-        uses: DavidAnson/markdownlint-cli2-action@v25.1.0
+        uses: DavidAnson/markdownlint-cli2-action@3ce8f712b5d8f31acd8e201be6d97e3d2bb23eb7 # v25.1.0
         with:
           config: ${{ inputs.markdownlint-changelog-config }}
           globs: CHANGELOG.md
 
       - name: Run checkov
-        uses: bridgecrewio/checkov-action@v12.3146.0
+        uses: bridgecrewio/checkov-action@d4770c1ac4a966d8c3305b79c348c26232123aa1 # v12.3146.0
         with:
           directory: ${{ inputs.checkov-directory }}
           framework: ${{ inputs.checkov-framework }}

@@ -1,5 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "labels": ["dependencies"]
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["PMuellerCH/shared-actions"],
+      "pinDigests": false,
+      "description": "Internal references stay on the floating @v1 major tag by design (see README, Versioning)."
+    }
+  ]
 }
